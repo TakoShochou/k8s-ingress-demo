@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ingress-demo-deployment
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: ingress-demo
+  template:
+    metadata:
+      labels:
+        app: ingress-demo
+    spec:
+      containers:
+      - name: ingress-demo
+        image: dev.seagullsailors.com:5000/foo/demo:latest
+        ports:
+        - containerPort: 8080
+      imagePullSecrets:
+        - name: ingress-demo-docker-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ingress-demo-service
+spec:
+  selector:
+    app: ingress-demo
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+---
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-demo-ingress
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /demo
+        pathType: Prefix
+        backend:
+          serviceName: ingress-demo-service
+          servicePort: 80
